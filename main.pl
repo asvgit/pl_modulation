@@ -4,6 +4,7 @@
 
 write_id(Id) :-
 	atom_concat('My id is ', Id, Res),
+	writeln(Res),
 	write2log(Res).
 
 make_threads(N, []) :- N =< 0.
@@ -20,9 +21,10 @@ write2log(Mes) :-
 	thread_self(TID),
 	open('project.log', append, LOGFILE),
 	get_time(Now), format_time(atom(Date), '%d %b %Y %T ', Now, posix),
-	atom_concat(Date, TID, Info),
-	atom_concat(' ', Mes, Line),
-	atom_concat(Info, Line, Res),
+	%atom_concat(Date, TID, Info),
+	%atom_concat(' ', Mes, Line),
+	%atom_concat(Info, Line, Res),
+	atom_concat(Date, Mes, Res),
 	writeln(LOGFILE, Res).
 
 join([]).
