@@ -16,10 +16,6 @@ init :-
 	swritef(PeopleLog, 'Init people \'%t\'', [PeopleAppearList]),
 	write2log(PeopleLog).
 
-write_id(Id) :-
-	atom_concat('My id is ', Id, Res),
-	write2log(Res).
-
 check_people_appear(_, _, []).
 check_people_appear(Step, Id, [H | T]) :-
 	(Step = H ->
@@ -30,7 +26,6 @@ check_people_appear(Step, Id, [H | T]) :-
 	check_people_appear(Step, NextId, T).
 
 do_loop_step(Step) :-
-	write_id(Step),
 	nb_getval(people_appear, PeopleAppearList),
 	check_people_appear(Step, 0, PeopleAppearList).
 
@@ -39,11 +34,23 @@ do_loop_step(Step) :-
 dec_list([], []).
 dec_list([H | T], [ResH | ResT]) :- ResH is H - 1, dec_list(T, ResT).
 
+get_step_mod(Res) :-
+	nb_getval(n_steps, Steps),
+	(nb_current(step, Step), Step < Steps ->
+		Res = Step
+	;
+		Res = null
+	).
+
 write2log(Mes) :-
 	nb_getval(logfile, Logfile),
 	open(Logfile, append, LOG),
 	get_time(Now), format_time(atom(Date), '%d %b %Y %T ', Now, posix),
-	atom_concat(Date, Mes, Res),
+	get_step_mod(SID),
+	process_id(PID),
+	swritef(StepId, '[%t:%t] ', [PID, SID]),
+	atom_concat(Date, StepId, Prefix),
+	atom_concat(Prefix, Mes, Res),
 	writeln(LOG, Res),
 	close(LOG).
 
@@ -65,16 +72,19 @@ do_loop :-
 do_loop :-
 	nb_getval(step, Step),
 	nb_getval(n_steps, Steps),
-	Step < Steps, Next is Step + 1,
-	nb_setval(step, Next),
+	Step < Steps,
+	write2log('Start step'),
 	do_loop_step(Step),
+	write2log('Finish step'),
+	Next is Step + 1,
+	nb_setval(step, Next),
 	do_loop.
 
 run:-
 	write2log('Start modulation'),
 	init,
 	do_loop,
-	write2log('Stop modulation').
+	write2log('Finith modulation').
 
 % GOAL
 :- run.
