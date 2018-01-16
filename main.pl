@@ -16,21 +16,13 @@ show_var :-
 
 % DEVEL
 
-get_people_elem(ListName, Id, Res) :-
-	nb_getval(n_people, NPeople),
-	(Id >= NPeople ->
-		write2log('Error! Index out of n_people'), halt
-	;
-		nb_getval(ListName, List),
-		get_elem(List, Id, 0, Res)
-	).
-
 check_people_appear(_, _, []).
 check_people_appear(Step, Id, [H | T]) :-
 	(Step = H ->
 		get_people_elem(people_floors, Id, Floor),
 		swritef(AppearLog, 'A man appears with id \'%t\' on floor with id %t', [Id, Floor]),
-		write2log(AppearLog)
+		write2log(AppearLog),
+		set_people_elem(people_states, Id, 1)
 	; true),
 	NextId is Id + 1,
 	check_people_appear(Step, NextId, T).
@@ -48,6 +40,33 @@ get_elem([H | T], Id, Ind, Res) :-
 	;
 		NextInd is Ind + 1,
 		get_elem(T, Id, NextInd, Res)
+	).
+
+get_people_elem(ListName, Id, Res) :-
+	nb_getval(n_people, NPeople),
+	(Id >= NPeople ->
+		write2log('Error! Index out of n_people'), halt
+	;
+		nb_getval(ListName, List),
+		get_elem(List, Id, 0, Res)
+	).
+
+set_elem([], _, _, _, []).
+set_elem([H | T], Id, Ind, Val, [HRes | TRes]) :-
+	(Ind = Id -> HRes is Val ; HRes is H),
+	NextInd is Ind + 1,
+	set_elem(T, Id, NextInd, Val, TRes).
+
+set_people_elem(ListName, Id, Val) :-
+	nb_getval(n_people, NPeople),
+	(Id >= NPeople ->
+		write2log('Error! Index out of n_people'), halt
+	;
+		nb_getval(ListName, List),
+		set_elem(List, Id, 0, Val, Res),
+		nb_setval(ListName, Res),
+		swritef(ListLog, 'Change list \'%t\' with id \'%t\' res:\'%t\'', [ListName, Id, Res]),
+		write2log(ListLog)
 	).
 
 zero_list(N, []) :- N =< 0.
@@ -98,13 +117,25 @@ init_people :-
 	nb_setval(people_floors, PeopleFloorList),
 	swritef(PeopleFloorLog, 'Init people floors \'%t\'', [PeopleFloorList]),
 	write2log(PeopleFloorLog),
-	init_waiting_list.
+	init_waiting_list,
+	init_people_states.
 
 init_waiting_list :-
 	nb_getval(n_people, N),
 	zero_list(N, List),
 	nb_setval(people_waiting, List),
 	swritef(PeopleLog, 'Init people waiting \'%t\'', [List]),
+	write2log(PeopleLog).
+
+% People statuses
+% 0 - inactive
+% 1 - wating
+% 2 - moving
+init_people_states :-
+	nb_getval(n_people, NPeople),
+	zero_list(NPeople, List),
+	nb_setval(people_states, List),
+	swritef(PeopleLog, 'Init people states \'%t\'', [List]),
 	write2log(PeopleLog).
 
 init_elevators :-
