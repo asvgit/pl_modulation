@@ -2,19 +2,19 @@
 :- nb_setval(logfile, 'project.log').
 :- nb_setval(n_steps, 9).
 :- nb_setval(n_elevators, 2).
-:- nb_setval(n_people, 3).
 :- nb_setval(n_floors, 5).
+:- nb_setval(n_people, 3).
+
+show_var :-
+	nb_getval(n_steps, Steps),
+	nb_getval(n_elevators, Elev),
+	nb_getval(n_floors, Floors),
+	nb_getval(n_people, People),
+	swritef(VarLog, 'Show var: Steps \'%t\' Elev \'%t\' Floors \'%t\' People \'%t\'',
+		[Steps, Elev, Floors, People]),
+	write2log(VarLog).
 
 % DEVEL
-
-get_elem([], _, _, _) :- write2log('Error! Can\'t find by index'), halt.
-get_elem([H | T], Id, Ind, Res) :-
-	(Ind = Id ->
-		Res is H
-	;
-		NextInd is Ind + 1,
-		get_elem(T, Id, NextInd, Res)
-	).
 
 get_people_elem(ListName, Id, Res) :-
 	nb_getval(n_people, NPeople),
@@ -40,6 +40,15 @@ do_loop_step(Step) :-
 	check_people_appear(Step, 0, PeopleAppearList).
 
 % MISC
+
+get_elem([], _, _, _) :- write2log('Error! Can\'t find by index'), halt.
+get_elem([H | T], Id, Ind, Res) :-
+	(Ind = Id ->
+		Res is H
+	;
+		NextInd is Ind + 1,
+		get_elem(T, Id, NextInd, Res)
+	).
 
 zero_list(N, []) :- N =< 0.
 zero_list(N, [H | T]) :- Next is N - 1, H is 0, zero_list(Next, T).
@@ -73,7 +82,8 @@ write2log(Mes) :-
 
 init :-
 	write2log('Init proc'),
-	init_people.
+	init_people,
+	init_elevators.
 
 init_people :-
 	write2log('Init people proc'),
@@ -96,6 +106,14 @@ init_waiting_list :-
 	nb_setval(people_waiting, List),
 	swritef(PeopleLog, 'Init people waiting \'%t\'', [List]),
 	write2log(PeopleLog).
+
+init_elevators :-
+	write2log('Init elevators proc'),
+	nb_getval(n_elevators, N),
+	zero_list(N, List),
+	nb_setval(elevators_waiting, List),
+	swritef(ElevLog, 'Init elevators floors \'%t\'', [List]),
+	write2log(ElevLog).
 
 % PROCESSING
 
@@ -124,6 +142,7 @@ do_loop :-
 	do_loop.
 
 run:-
+	show_var,
 	write2log('Start modulation'),
 	init,
 	do_loop,
