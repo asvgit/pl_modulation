@@ -97,6 +97,14 @@ zero_list(N, [H | T]) :- Next is N - 1, H is 0, zero_list(Next, T).
 rand_seq(0, _, []).
 rand_seq(Size, Top, [H | T]) :- random(0, Top, H), Next is Size - 1, rand_seq(Next, Top, T).
 
+enother_random(Val, Top, Res) :-
+	random(0, Top, Rnd),
+	(Val = Rnd ->
+		enother_random(Val, Top, Res)
+	;
+		Res is Rnd
+	).
+
 dec_list([], []).
 dec_list([H | T], [ResH | ResT]) :- ResH is H - 1, dec_list(T, ResT).
 
@@ -139,6 +147,7 @@ init_people :-
 	nb_setval(people_floors, PeopleFloorList),
 	swritef(PeopleFloorLog, 'Init people floors \'%t\'', [PeopleFloorList]),
 	write2log(PeopleFloorLog),
+	init_people_targets,
 	init_waiting_list,
 	init_people_states.
 
@@ -159,6 +168,19 @@ init_people_states :-
 	nb_setval(people_states, List),
 	swritef(PeopleLog, 'Init people states \'%t\'', [List]),
 	write2log(PeopleLog).
+
+fill_people_targets(_, [], []).
+fill_people_targets(NFloors, [HPFL | TPFL], [HPTL | TPTL]) :-
+	enother_random(HPFL, NFloors, HPTL),
+	fill_people_targets(NFloors, TPFL, TPTL).
+
+init_people_targets :-
+	nb_getval(n_floors, NFloors),
+	nb_getval(people_floors, PeopleFloorList),
+	fill_people_targets(NFloors, PeopleFloorList, PeopleTargetsList),
+	swritef(PeopleLog, 'Init people targets \'%t\'', [PeopleTargetsList]),
+	write2log(PeopleLog).
+
 
 init_elevators :-
 	write2log('Init elevators proc'),
