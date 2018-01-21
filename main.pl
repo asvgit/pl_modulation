@@ -188,7 +188,30 @@ init_elevators :-
 	zero_list(N, List),
 	nb_setval(elevators_waiting, List),
 	swritef(ElevLog, 'Init elevators floors \'%t\'', [List]),
-	write2log(ElevLog).
+	write2log(ElevLog),
+	init_elev_lists.
+
+init_elev_lists :-
+	write2log('Init elevators lists'),
+	nb_getval(n_elevators, NElev),
+	fill_elev_list(NElev).
+
+fill_elev_list(Id) :-
+	(Id =< 0 ->
+		true
+	;
+		NextId is Id - 1,
+		empty_set('elev_rmap_', NextId),
+		empty_set('elev_people_', NextId),
+		fill_elev_list(NextId)
+	).
+
+empty_set(Prefix, Id) :-
+		atom_concat(Prefix, Id, Res),
+		term_string(Name, Res),
+		nb_setval(Name, []),
+		swritef(ElevLog, 'Init elevator \'%t\', val \'%t\'', [Name, []]),
+		write2log(ElevLog).
 
 % PROCESSING
 show_stat :-
