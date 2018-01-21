@@ -17,8 +17,7 @@ show_var :-
 % DEVEL
 
 do_loop_step(Step) :-
-	nb_getval(people_appear, PeopleAppearList),
-	check_people_appear(Step, 0, PeopleAppearList),
+	check_people_appear(Step),
 	check_people_waiting(Step).
 
 % MISC PEOLPE
@@ -39,8 +38,8 @@ check_people_waiting(Step) :-
 	nb_getval(people_states, PeopleStatesList),
 	manage_people_waiting(Step, 0, PeopleStatesList).
 
-check_people_appear(_, _, []).
-check_people_appear(Step, Id, [H | T]) :-
+manage_people_appear(_, _, []).
+manage_people_appear(Step, Id, [H | T]) :-
 	(Step = H ->
 		get_people_elem(people_floors, Id, Floor),
 		swritef(AppearLog, 'A man appears with id \'%t\' on floor with id %t', [Id, Floor]),
@@ -48,7 +47,11 @@ check_people_appear(Step, Id, [H | T]) :-
 		set_people_elem(people_states, Id, 1)
 	; true),
 	NextId is Id + 1,
-	check_people_appear(Step, NextId, T).
+	manage_people_appear(Step, NextId, T).
+
+check_people_appear(Step) :-
+	nb_getval(people_appear, PeopleAppearList),
+	manage_people_appear(Step, 0, PeopleAppearList).
 
 get_people_elem(ListName, Id, Res) :-
 	nb_getval(n_people, NPeople),
