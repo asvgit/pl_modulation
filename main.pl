@@ -16,9 +16,60 @@ show_var :-
 
 % DEVEL
 
+
 do_loop_step(Step) :-
 	check_people_appear(Step),
 	check_people_waiting(Step).
+
+% MISC ELEVATORS
+
+% append2map(Elev, Floor).
+% get_min(Distances, Elev) :- Elev is 0.
+% fill_dist(Dist, Distances) :- Dist is Distances.
+
+find_available_elev(Floor). % :-
+	% nb_getval(n_elevators, NElev),
+	% zero_list(NElev, Dist),
+	% fill_dist(Dist, Distances),
+	% swritef(ElevLog, 'Current distances are \'%t\'', [Distances]),
+	% write2log(ElevLog),
+	% get_min(Distances, Elev),
+	% append2map(Elev, Floor).
+
+find_in_list([], _, Res) :- Res = false.
+find_in_list([H | T], Val, Res) :-
+	(H = Val ->
+		Res is true
+	;
+		find_in_list(T, Val, Res)
+	).
+
+find_in_elev_lists(_, Ind, Res) :- Ind =< 0, Res = false.
+find_in_elev_lists(Floor, Ind, Res) :-
+	Ind >= 0,
+	NextInd is Ind - 1,
+	atom_concat('elev_map_', NextInd, ListName),
+	term_string(ListTerm, ListName),
+	nb_setval(ListTerm, List),
+	find_in_list(List, Floor, FRes),
+	(FRes ->
+		Res is true
+	;
+		find_in_elev_lists(Floor, NextInd, Res)
+	).
+
+find_floor(Floor, Res) :-
+	nb_getval(n_elevators, NElev),
+	find_in_elev_lists(Floor, NElev, Res).
+
+elev_call(Floor) :-
+	find_floor(Floor, IsFloorInMaps),
+	(IsFloorInMaps ->
+		write2log('Floor is in maps')
+	;
+		write2log('Putting floor to map'),
+		find_available_elev(Floor)
+	).
 
 % MISC PEOLPE
 
@@ -44,7 +95,8 @@ manage_people_appear(Step, Id, [H | T]) :-
 		get_people_elem(people_floors, Id, Floor),
 		swritef(AppearLog, 'A man appears with id \'%t\' on floor with id %t', [Id, Floor]),
 		write2log(AppearLog),
-		set_people_elem(people_states, Id, 1)
+		set_people_elem(people_states, Id, 1),
+		elev_call(Floor)
 	; true),
 	NextId is Id + 1,
 	manage_people_appear(Step, NextId, T).
