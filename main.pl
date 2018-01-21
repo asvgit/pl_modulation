@@ -16,6 +16,29 @@ show_var :-
 
 % DEVEL
 
+do_loop_step(Step) :-
+	nb_getval(people_appear, PeopleAppearList),
+	check_people_appear(Step, 0, PeopleAppearList),
+	check_people_waiting(Step).
+
+% MISC PEOLPE
+
+manage_people_waiting(_, _, []).
+manage_people_waiting(Step, Id, [H_PSL | T_PSL]) :-
+	(H_PSL = 1 -> % 1 is wating state
+		get_people_elem(people_waiting, Id, Waiting),
+		swritef(WaitingLog, 'A man with id \'%t\' has been waiting for \'%t\'', [Id, Waiting]),
+		write2log(WaitingLog),
+		NewWaitingVal is Waiting + 1,
+		set_people_elem(people_waiting, Id, NewWaitingVal)
+	; true),
+	NextId is Id + 1,
+	manage_people_waiting(Step, NextId, T_PSL).
+
+check_people_waiting(Step) :-
+	nb_getval(people_states, PeopleStatesList),
+	manage_people_waiting(Step, 0, PeopleStatesList).
+
 check_people_appear(_, _, []).
 check_people_appear(Step, Id, [H | T]) :-
 	(Step = H ->
@@ -27,21 +50,6 @@ check_people_appear(Step, Id, [H | T]) :-
 	NextId is Id + 1,
 	check_people_appear(Step, NextId, T).
 
-do_loop_step(Step) :-
-	nb_getval(people_appear, PeopleAppearList),
-	check_people_appear(Step, 0, PeopleAppearList).
-
-% MISC
-
-get_elem([], _, _, _) :- write2log('Error! Can\'t find by index'), halt.
-get_elem([H | T], Id, Ind, Res) :-
-	(Ind = Id ->
-		Res is H
-	;
-		NextInd is Ind + 1,
-		get_elem(T, Id, NextInd, Res)
-	).
-
 get_people_elem(ListName, Id, Res) :-
 	nb_getval(n_people, NPeople),
 	(Id >= NPeople ->
@@ -50,12 +58,6 @@ get_people_elem(ListName, Id, Res) :-
 		nb_getval(ListName, List),
 		get_elem(List, Id, 0, Res)
 	).
-
-set_elem([], _, _, _, []).
-set_elem([H | T], Id, Ind, Val, [HRes | TRes]) :-
-	(Ind = Id -> HRes is Val ; HRes is H),
-	NextInd is Ind + 1,
-	set_elem(T, Id, NextInd, Val, TRes).
 
 set_people_elem(ListName, Id, Val) :-
 	nb_getval(n_people, NPeople),
@@ -68,6 +70,23 @@ set_people_elem(ListName, Id, Val) :-
 		swritef(ListLog, 'Change list \'%t\' with id \'%t\' res:\'%t\'', [ListName, Id, Res]),
 		write2log(ListLog)
 	).
+
+% MISC
+
+get_elem([], _, _, _) :- write2log('Error! Can\'t find by index'), halt.
+get_elem([H | T], Id, Ind, Res) :-
+	(Ind = Id ->
+		Res is H
+	;
+		NextInd is Ind + 1,
+		get_elem(T, Id, NextInd, Res)
+	).
+
+set_elem([], _, _, _, []).
+set_elem([H | T], Id, Ind, Val, [HRes | TRes]) :-
+	(Ind = Id -> HRes is Val ; HRes is H),
+	NextInd is Ind + 1,
+	set_elem(T, Id, NextInd, Val, TRes).
 
 zero_list(N, []) :- N =< 0.
 zero_list(N, [H | T]) :- Next is N - 1, H is 0, zero_list(Next, T).
@@ -147,6 +166,11 @@ init_elevators :-
 	write2log(ElevLog).
 
 % PROCESSING
+show_stat :-
+	write2log('Show statistics'),
+	nb_getval(people_waiting, PeopleWaitingList),
+	swritef(PeopleWaitingLog, 'People waiting results: \'%t\'', [PeopleWaitingList]),
+	write2log(PeopleWaitingLog).
 
 do_loop :-
 	(nb_current(step, _) ->
@@ -177,7 +201,8 @@ run:-
 	write2log('Start modulation'),
 	init,
 	do_loop,
-	write2log('Finith modulation').
+	write2log('Finith modulation'),
+	show_stat.
 
 % GOAL
 :- run.
