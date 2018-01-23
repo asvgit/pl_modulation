@@ -16,10 +16,50 @@ show_var :-
 
 % DEVEL
 
+move_elev(_, _, [], []).
+move_elev(_, Pos, [Pos | TM], TM).
+move_elev(_, _, [-1 | TM], TM) :-
+	write2log('GET PEOPLE').
+move_elev(Id, Pos, [HT | TM], [HT | TM]) :-
+	( Pos > HT ->
+		NewPos = Pos - 1
+	;
+		NewPos = Pos + 1
+	),
+	nb_getval(elevators_floors, List),
+	set_elem(List, Id, 0, NewPos, NewList),
+	nb_setval(elevators_floors, NewList).
+
+move_elevators(Id) :-
+	(Id =< 0 ->
+		true
+	;
+		swritef(Trace, 'Trace move_elevators \'%t\'', [Id]),
+		write2log(Trace),
+		NextId is Id - 1,
+		atom_concat('elev_rmap_', NextId, MapName),
+		term_string(MapTerm, MapName),
+		nb_getval(MapTerm, Map),
+		nb_getval(elevators_floors, ElevFloors),
+		get_elem(ElevFloors, NextId, 0, ElevPos),
+		move_elev(NextId, ElevPos, Map, NewMap),
+		swritef(ElevLog, 'Current elev \'%t\' road map \'%t\'', [NextId, NewMap]),
+		write2log(ElevLog),
+		nb_setval(MapTerm, NewMap),
+		move_elevators(NextId)
+	).
+
+manage_elevators :-
+	nb_getval(elevators_floors, ElevFloors),
+	swritef(ElevLog, 'Elev floors \'%t\'', [ElevFloors]),
+	write2log(ElevLog),
+	nb_getval(n_elevators, NElev),
+	move_elevators(NElev).
 
 do_loop_step(Step) :-
 	check_people_appear(Step),
-	check_people_waiting(Step).
+	check_people_waiting(Step),
+	manage_elevators.
 
 % MISC ELEVATORS
 
@@ -254,7 +294,7 @@ init_waiting_list :-
 % People statuses
 % 0 - inactive
 % 1 - wating
-% 2 - moving
+% 2 - moved
 init_people_states :-
 	nb_getval(n_people, NPeople),
 	zero_list(NPeople, List),
