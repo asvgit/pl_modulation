@@ -16,10 +16,80 @@ show_var :-
 
 % DEVEL
 
+getting_people_in(Elev, Floor, Id, Res) :-
+	( Id > 0 ->
+		% swritef(Trace, 'Trace getting_people_in \'%t\'', [Id]),
+		% write2log(Trace),
+		NextId is Id - 1,
+		get_people_elem(people_floors, NextId, PFloor),
+		get_people_elem(people_states, NextId, PState),
+		(PFloor = Floor, PState = 1 ->
+			Res = [H | T],
+			H = NextId,
+			set_people_elem(people_states, NextId, 2), % 2 - moving state
+			get_people_elem(people_targets, NextId, PTarget),
+			append2map(Elev, PTarget),
+			getting_people_in(Elev, Floor, NextId, T)
+		;
+			getting_people_in(Elev, Floor, NextId, Res)
+		)
+	;
+		Res = []
+	).
+
+get_people_in(NPeople, Elev, Floor) :-
+	getting_people_in(Elev, Floor, NPeople, ComingPeople),
+	swritef(ElevLog, 'Coming people \'%t\' to elev \'%t\'', [ComingPeople, Elev]),
+	write2log(ElevLog),
+	ListPrefix = 'elev_people_',
+	get_elev_list(ListPrefix, Elev, List),
+	append(List, ComingPeople, NewList),
+	set_elev_list(ListPrefix, Elev, NewList).
+
+getting_people_out(Elev, Floor, Id, Res) :-
+	( Id > 0 ->
+		NextId is Id - 1,
+		get_people_elem(people_targets, NextId, PTarget),
+		get_people_elem(people_states, NextId, PState),
+		get_elev_list('elev_people_', Elev, List),
+		(PTarget = Floor, PState = 2, member(NextId, List) ->
+			Res = [H | T],
+			H = NextId,
+			set_people_elem(people_states, NextId, 3), % 3 - Moved
+			getting_people_out(Elev, Floor, NextId, T)
+		;
+			getting_people_out(Elev, Floor, NextId, Res)
+		)
+	;
+		Res = []
+	).
+
+delete_sublist([], _, []).
+delete_sublist(List, [], List).
+delete_sublist(List, [HSL | TSL], ResList) :-
+	delete(List, HSL, Res),
+	delete_sublist(Res, TSL, ResList).
+
+get_people_out(NPeople, Elev, Floor) :-
+	getting_people_out(Elev, Floor, NPeople, PeopleList),
+	swritef(ElevLog, 'Going out people \'%t\' from elev \'%t\'', [PeopleList, Elev]),
+	write2log(ElevLog),
+	ListPrefix = 'elev_people_',
+	get_elev_list(ListPrefix, Elev, List),
+	delete_sublist(List, PeopleList, NewList),
+	set_elev_list(ListPrefix, Elev, NewList).
+
+manage_elev_people(Elev, Floor) :-
+	nb_getval(n_people, NPeople),
+	get_people_out(NPeople, Elev, Floor),
+	get_people_in(NPeople, Elev, Floor).
+
 move_elev(_, _, [], []).
 move_elev(_, Pos, [Pos | TM], TM).
-move_elev(_, _, [-1 | TM], TM) :-
-	write2log('GET PEOPLE').
+move_elev(Id, Pos, [-1 | _], TList) :-
+	write2log('GET PEOPLE'),
+	manage_elev_people(Id, Pos),
+	get_elev_list('elev_rmap_', Id, [-1 | TList]).
 move_elev(Id, Pos, [HT | TM], [HT | TM]) :-
 	( Pos > HT ->
 		NewPos = Pos - 1
@@ -34,18 +104,19 @@ move_elevators(Id) :-
 	(Id =< 0 ->
 		true
 	;
-		swritef(Trace, 'Trace move_elevators \'%t\'', [Id]),
-		write2log(Trace),
 		NextId is Id - 1,
-		atom_concat('elev_rmap_', NextId, MapName),
-		term_string(MapTerm, MapName),
-		nb_getval(MapTerm, Map),
+		swritef(Trace, 'Trace move_elevators \'%t\'', [NextId]),
+		write2log(Trace),
+		ListPrefix = 'elev_rmap_',
+		get_elev_list(ListPrefix, NextId, RMap),
 		nb_getval(elevators_floors, ElevFloors),
 		get_elem(ElevFloors, NextId, 0, ElevPos),
-		move_elev(NextId, ElevPos, Map, NewMap),
-		swritef(ElevLog, 'Current elev \'%t\' road map \'%t\'', [NextId, NewMap]),
+		move_elev(NextId, ElevPos, RMap, NewRMap),
+		get_elev_list('elev_people_', NextId, PeopleList),
+		swritef(ElevLog, 'Current elev \'%t\' road map \'%t\' people \'%t\'',
+			[NextId, NewRMap, PeopleList]),
 		write2log(ElevLog),
-		nb_setval(MapTerm, NewMap),
+		set_elev_list(ListPrefix, NextId, NewRMap),
 		move_elevators(NextId)
 	).
 
@@ -62,6 +133,26 @@ do_loop_step(Step) :-
 	manage_elevators.
 
 % MISC ELEVATORS
+
+get_elev_list(ListPrefix, Id, List) :-
+	nb_getval(n_elevators, NElev),
+	(Id >= NElev ->
+		write2log('Error! Index out of n_elevators'), halt
+	;
+		atom_concat(ListPrefix, Id, ListName),
+		term_string(ListTerm, ListName),
+		nb_getval(ListTerm, List)
+	).
+
+set_elev_list(ListPrefix, Id, List) :-
+	nb_getval(n_elevators, NElev),
+	(Id >= NElev ->
+		write2log('Error! Index out of n_elevators'), halt
+	;
+		atom_concat(ListPrefix, Id, ListName),
+		term_string(ListTerm, ListName),
+		nb_setval(ListTerm, List)
+	).
 
 append2map(Elev, Floor) :-
 	atom_concat('elev_rmap_', Elev, MapName),
@@ -294,7 +385,8 @@ init_waiting_list :-
 % People statuses
 % 0 - inactive
 % 1 - wating
-% 2 - moved
+% 2 - moving
+% 3 - moved
 init_people_states :-
 	nb_getval(n_people, NPeople),
 	zero_list(NPeople, List),
@@ -311,6 +403,7 @@ init_people_targets :-
 	nb_getval(n_floors, NFloors),
 	nb_getval(people_floors, PeopleFloorList),
 	fill_people_targets(NFloors, PeopleFloorList, PeopleTargetsList),
+	nb_setval(people_targets, PeopleTargetsList),
 	swritef(PeopleLog, 'Init people targets \'%t\'', [PeopleTargetsList]),
 	write2log(PeopleLog).
 
