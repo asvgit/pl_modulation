@@ -1,9 +1,5 @@
-:- use_module(library(writef)).
-:- nb_setval(logfile, 'project.log').
-:- nb_setval(n_steps, 9).
-:- nb_setval(n_elevators, 2).
-:- nb_setval(n_floors, 5).
-:- nb_setval(n_people, 3).
+:- include('conf.pl').
+:- include('log.pl').
 
 show_var :-
 	nb_getval(n_steps, Steps),
@@ -12,14 +8,14 @@ show_var :-
 	nb_getval(n_people, People),
 	swritef(VarLog, 'Show var: Steps \'%t\' Elev \'%t\' Floors \'%t\' People \'%t\'',
 		[Steps, Elev, Floors, People]),
-	write2log(VarLog).
+	logdebug(VarLog).
 
 % DEVEL
 
 getting_people_in(Elev, Floor, Id, Res) :-
 	( Id > 0 ->
 		% swritef(Trace, 'Trace getting_people_in \'%t\'', [Id]),
-		% write2log(Trace),
+		% logtrace(Trace),
 		NextId is Id - 1,
 		get_people_elem(people_floors, NextId, PFloor),
 		get_people_elem(people_states, NextId, PState),
@@ -40,7 +36,7 @@ getting_people_in(Elev, Floor, Id, Res) :-
 get_people_in(NPeople, Elev, Floor) :-
 	getting_people_in(Elev, Floor, NPeople, ComingPeople),
 	swritef(ElevLog, 'Coming people \'%t\' to elev \'%t\'', [ComingPeople, Elev]),
-	write2log(ElevLog),
+	loginfo(ElevLog),
 	ListPrefix = 'elev_people_',
 	get_elev_list(ListPrefix, Elev, List),
 	append(List, ComingPeople, NewList),
@@ -73,7 +69,7 @@ delete_sublist(List, [HSL | TSL], ResList) :-
 get_people_out(NPeople, Elev, Floor) :-
 	getting_people_out(Elev, Floor, NPeople, PeopleList),
 	swritef(ElevLog, 'Going out people \'%t\' from elev \'%t\'', [PeopleList, Elev]),
-	write2log(ElevLog),
+	loginfo(ElevLog),
 	ListPrefix = 'elev_people_',
 	get_elev_list(ListPrefix, Elev, List),
 	delete_sublist(List, PeopleList, NewList),
@@ -87,7 +83,7 @@ manage_elev_people(Elev, Floor) :-
 move_elev(_, _, [], []).
 move_elev(_, Pos, [Pos | TM], TM).
 move_elev(Id, Pos, [-1 | _], TList) :-
-	write2log('GET PEOPLE'),
+	logtrace('Get people'),
 	manage_elev_people(Id, Pos),
 	get_elev_list('elev_rmap_', Id, [-1 | TList]).
 move_elev(Id, Pos, [HT | TM], [HT | TM]) :-
@@ -106,7 +102,7 @@ move_elevators(Id) :-
 	;
 		NextId is Id - 1,
 		swritef(Trace, 'Trace move_elevators \'%t\'', [NextId]),
-		write2log(Trace),
+		logtrace(Trace),
 		ListPrefix = 'elev_rmap_',
 		get_elev_list(ListPrefix, NextId, RMap),
 		nb_getval(elevators_floors, ElevFloors),
@@ -115,7 +111,7 @@ move_elevators(Id) :-
 		get_elev_list('elev_people_', NextId, PeopleList),
 		swritef(ElevLog, 'Current elev \'%t\' road map \'%t\' people \'%t\'',
 			[NextId, NewRMap, PeopleList]),
-		write2log(ElevLog),
+		logdebug(ElevLog),
 		set_elev_list(ListPrefix, NextId, NewRMap),
 		move_elevators(NextId)
 	).
@@ -123,7 +119,7 @@ move_elevators(Id) :-
 manage_elevators :-
 	nb_getval(elevators_floors, ElevFloors),
 	swritef(ElevLog, 'Elev floors \'%t\'', [ElevFloors]),
-	write2log(ElevLog),
+	logdebug(ElevLog),
 	nb_getval(n_elevators, NElev),
 	move_elevators(NElev).
 
@@ -137,7 +133,7 @@ do_loop_step(Step) :-
 get_elev_list(ListPrefix, Id, List) :-
 	nb_getval(n_elevators, NElev),
 	(Id >= NElev ->
-		write2log('Error! Index out of n_elevators'), halt
+		logerror('Error! Index out of n_elevators'), halt
 	;
 		atom_concat(ListPrefix, Id, ListName),
 		term_string(ListTerm, ListName),
@@ -147,7 +143,7 @@ get_elev_list(ListPrefix, Id, List) :-
 set_elev_list(ListPrefix, Id, List) :-
 	nb_getval(n_elevators, NElev),
 	(Id >= NElev ->
-		write2log('Error! Index out of n_elevators'), halt
+		logerror('Error! Index out of n_elevators'), halt
 	;
 		atom_concat(ListPrefix, Id, ListName),
 		term_string(ListTerm, ListName),
@@ -162,7 +158,7 @@ append2map(Elev, Floor) :-
 	append(MapWithFloor, [-1], NewMap),
 	nb_setval(MapTerm, NewMap),
 	swritef(ElevLog, 'Append to road map \'%t\' floor \'%t\'', [NewMap, Floor]),
-	write2log(ElevLog).
+	logdebug(ElevLog).
 
 get_min_dist_id([], 100500, Id) :- nb_getval(n_elevators, Id).
 get_min_dist_id([HDist | TDist], Res, Id) :-
@@ -202,10 +198,10 @@ find_available_elev(Floor) :-
 	zero_list(NElev, Dist),
 	fill_dist(NElev, Floor, Dist, Distances),
 	swritef(ElevDistLog, 'Current distances are \'%t\'', [Distances]),
-	write2log(ElevDistLog),
+	logdebug(ElevDistLog),
 	get_min_dist_id(Distances, MinDist, Elev),
 	swritef(ElevMinDistLog, 'Current min dist \'%t\' with id \'%t\'', [MinDist, Elev]),
-	write2log(ElevMinDistLog),
+	logdebug(ElevMinDistLog),
 	append2map(Elev, Floor).
 
 find_in_list([], _, Res) :- Res = false.
@@ -237,9 +233,9 @@ find_floor(Floor, Res) :-
 elev_call(Floor) :-
 	find_floor(Floor, IsFloorInMaps),
 	(IsFloorInMaps ->
-		write2log('Floor is in maps')
+		logdebug('Floor is in maps')
 	;
-		write2log('Putting floor to map'),
+		logdebug('Putting floor to map'),
 		find_available_elev(Floor)
 	).
 
@@ -250,7 +246,7 @@ manage_people_waiting(Step, Id, [H_PSL | T_PSL]) :-
 	(H_PSL = 1 -> % 1 is wating state
 		get_people_elem(people_waiting, Id, Waiting),
 		swritef(WaitingLog, 'A man with id \'%t\' has been waiting for \'%t\'', [Id, Waiting]),
-		write2log(WaitingLog),
+		logdebug(WaitingLog),
 		NewWaitingVal is Waiting + 1,
 		set_people_elem(people_waiting, Id, NewWaitingVal)
 	; true),
@@ -266,7 +262,7 @@ manage_people_appear(Step, Id, [H | T]) :-
 	(Step = H ->
 		get_people_elem(people_floors, Id, Floor),
 		swritef(AppearLog, 'A man appears with id \'%t\' on floor with id \'%t\'', [Id, Floor]),
-		write2log(AppearLog),
+		loginfo(AppearLog),
 		set_people_elem(people_states, Id, 1),
 		elev_call(Floor)
 	; true),
@@ -280,7 +276,7 @@ check_people_appear(Step) :-
 get_people_elem(ListName, Id, Res) :-
 	nb_getval(n_people, NPeople),
 	(Id >= NPeople ->
-		write2log('Error! Index out of n_people'), halt
+		logerror('Error! Index out of n_people'), halt
 	;
 		nb_getval(ListName, List),
 		get_elem(List, Id, 0, Res)
@@ -289,18 +285,18 @@ get_people_elem(ListName, Id, Res) :-
 set_people_elem(ListName, Id, Val) :-
 	nb_getval(n_people, NPeople),
 	(Id >= NPeople ->
-		write2log('Error! Index out of n_people'), halt
+		logerror('Error! Index out of n_people'), halt
 	;
 		nb_getval(ListName, List),
 		set_elem(List, Id, 0, Val, Res),
 		nb_setval(ListName, Res),
 		swritef(ListLog, 'Change list \'%t\' with id \'%t\' res:\'%t\'', [ListName, Id, Res]),
-		write2log(ListLog)
+		logdebug(ListLog)
 	).
 
 % MISC
 
-get_elem([], _, _, _) :- write2log('Error! Can\'t find by index'), halt.
+get_elem([], _, _, _) :- logerror('Error! Can\'t find by index'), halt.
 get_elem([H | T], Id, Ind, Res) :-
 	(Ind = Id ->
 		Res is H
@@ -339,38 +335,26 @@ get_step_mod(Res) :-
 	;
 		Res = null
 	).
-
-write2log(Mes) :-
-	nb_getval(logfile, Logfile),
-	open(Logfile, append, LOG),
-	get_time(Now), format_time(atom(Date), '%d %b %Y %T ', Now, posix),
-	get_step_mod(SID),
-	process_id(PID),
-	swritef(StepId, '[%t:%t] ', [PID, SID]),
-	atom_concat(Date, StepId, Prefix),
-	atom_concat(Prefix, Mes, Res),
-	writeln(LOG, Res),
-	close(LOG).
 % Init
 
 init :-
-	write2log('Init proc'),
+	logtrace('Init proc'),
 	init_people,
 	init_elevators.
 
 init_people :-
-	write2log('Init people proc'),
+	logtrace('Init people proc'),
 	nb_getval(n_steps, Steps),
 	nb_getval(n_people, NPeople),
 	rand_seq(NPeople, Steps, PeopleAppearList),
 	nb_setval(people_appear, PeopleAppearList),
 	swritef(PeopleAppearLog, 'Init people apprears \'%t\'', [PeopleAppearList]),
-	write2log(PeopleAppearLog),
+	logdebug(PeopleAppearLog),
 	nb_getval(n_floors, NFloors),
 	rand_seq(NPeople, NFloors, PeopleFloorList),
 	nb_setval(people_floors, PeopleFloorList),
 	swritef(PeopleFloorLog, 'Init people floors \'%t\'', [PeopleFloorList]),
-	write2log(PeopleFloorLog),
+	logdebug(PeopleFloorLog),
 	init_people_targets,
 	init_waiting_list,
 	init_people_states.
@@ -380,7 +364,7 @@ init_waiting_list :-
 	zero_list(N, List),
 	nb_setval(people_waiting, List),
 	swritef(PeopleLog, 'Init people waiting \'%t\'', [List]),
-	write2log(PeopleLog).
+	logdebug(PeopleLog).
 
 % People statuses
 % 0 - inactive
@@ -392,7 +376,7 @@ init_people_states :-
 	zero_list(NPeople, List),
 	nb_setval(people_states, List),
 	swritef(PeopleLog, 'Init people states \'%t\'', [List]),
-	write2log(PeopleLog).
+	logdebug(PeopleLog).
 
 fill_people_targets(_, [], []).
 fill_people_targets(NFloors, [HPFL | TPFL], [HPTL | TPTL]) :-
@@ -405,20 +389,20 @@ init_people_targets :-
 	fill_people_targets(NFloors, PeopleFloorList, PeopleTargetsList),
 	nb_setval(people_targets, PeopleTargetsList),
 	swritef(PeopleLog, 'Init people targets \'%t\'', [PeopleTargetsList]),
-	write2log(PeopleLog).
+	logdebug(PeopleLog).
 
 
 init_elevators :-
-	write2log('Init elevators proc'),
+	logtrace('Init elevators proc'),
 	nb_getval(n_elevators, N),
 	zero_list(N, List),
 	nb_setval(elevators_floors, List),
 	swritef(ElevLog, 'Init elevators floors \'%t\'', [List]),
-	write2log(ElevLog),
+	logdebug(ElevLog),
 	init_elev_lists.
 
 init_elev_lists :-
-	write2log('Init elevators lists'),
+	logtrace('Init elevators lists'),
 	nb_getval(n_elevators, NElev),
 	fill_elev_list(NElev).
 
@@ -437,21 +421,21 @@ empty_set(Prefix, Id) :-
 		term_string(Name, Res),
 		nb_setval(Name, []),
 		swritef(ElevLog, 'Init elevator \'%t\', val \'%t\'', [Name, []]),
-		write2log(ElevLog).
+		logdebug(ElevLog).
 
 % PROCESSING
 show_stat :-
-	write2log('Show statistics'),
+	logtrace('Show statistics'),
 	nb_getval(people_waiting, PeopleWaitingList),
 	swritef(PeopleWaitingLog, 'People waiting results: \'%t\'', [PeopleWaitingList]),
-	write2log(PeopleWaitingLog).
+	loginfo(PeopleWaitingLog).
 
 do_loop :-
 	(nb_current(step, _) ->
 		false
 	;
-		write2log('Var \'Step\' has null value'),
-		write2log('Set first step \'0\''),
+		logwarn('Var \'Step\' has null value'),
+		loginfo('Set first step \'0\''),
 		nb_setval(step, 0)
 	),
 	do_loop.
@@ -463,19 +447,19 @@ do_loop :-
 	nb_getval(step, Step),
 	nb_getval(n_steps, Steps),
 	Step < Steps,
-	write2log('Start step'),
+	logtrace('Start step'),
 	do_loop_step(Step),
-	write2log('Finish step'),
+	logtrace('Finish step'),
 	Next is Step + 1,
 	nb_setval(step, Next),
 	do_loop.
 
 run:-
 	show_var,
-	write2log('Start modulation'),
+	logtrace('Start modulation'),
 	init,
 	do_loop,
-	write2log('Finith modulation'),
+	logtrace('Finith modulation'),
 	show_stat.
 
 % GOAL
