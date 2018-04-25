@@ -1,12 +1,8 @@
+:- ensure_loaded('conf.pl').
+
 :- use_module(library(writef)).
 :- nb_setval(logfile, 'project.log').
 
-% 1 - info
-% 2 - trace
-% 3 - debug
-:- nb_setval(use_log, 3).
-
-:- nb_setval(use_color, 1).
 :- nb_setval(colorend, '\033[0m').
 :- nb_setval(color_green, '\033[1;32m').
 :- nb_setval(color_yellow, '\033[1;33m').
@@ -30,7 +26,7 @@ write2log(Mes) :-
 
 make_logstr(Name, Color, Mes, Templ) :-
 	atom_concat(' ', Mes, Msg),
-	nb_getval(use_color, CUse),
+	nb_getval(use_color_log, CUse),
 	( CUse > 0 -> 
 		nb_getval(colorend, CEnd),
 		atom_concat(Color, Name, CName),
