@@ -107,6 +107,6 @@ elev_call(Floor) :-
 	(IsFloorInMaps ->
 		logdebug('Floor is in maps')
 	;
-		logdebug('Putting floor to map'),
+		logtrace('Putting floor to map'),
 		find_available_elev(Floor)
 	).

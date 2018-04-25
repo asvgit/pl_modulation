@@ -14,6 +14,7 @@ manage_elevators :-
 	move_elevators(NElev).
 
 manage_people :-
+	get_step_mod(Step),
 	check_people_appear(Step),
 	check_people_waiting(Step).
 
