@@ -16,6 +16,10 @@ show_stat :-
 	swritef(PeopleWaitingLog, 'People waiting results: \'%t\'', [PeopleWaitingList]),
 	loginfo(PeopleWaitingLog).
 
+is_memder([], _) :- false.
+is_memder([H | _], Val) :- H = Val.
+is_memder([_ | T], Val) :- is_memder(T, Val).
+
 get_elem([], _, _, _) :- logerror('Error! Can\'t find by index'), halt.
 get_elem([H | T], Id, Ind, Res) :-
 	(Ind = Id ->

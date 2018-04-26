@@ -26,11 +26,16 @@ append2map(Elev, Floor) :-
 	atom_concat('elev_rmap_', Elev, MapName),
 	term_string(MapTerm, MapName),
 	nb_getval(MapTerm, Map),
-	append(Map, [Floor], MapWithFloor),
-	append(MapWithFloor, [-1], NewMap),
-	nb_setval(MapTerm, NewMap),
-	swritef(ElevLog, 'Append to road map \'%t\' floor \'%t\'', [NewMap, Floor]),
-	logdebug(ElevLog).
+	( is_memder(Map, Floor) ->
+		swritef(ElevLog, 'Road map \'%t\' has such floor \'%t\'', [Map, Floor]),
+		logdebug(ElevLog)
+	;
+		append(Map, [Floor], MapWithFloor),
+		append(MapWithFloor, [-1], NewMap),
+		nb_setval(MapTerm, NewMap),
+		swritef(ElevLog, 'Append to road map \'%t\' floor \'%t\'', [NewMap, Floor]),
+		logdebug(ElevLog)
+	).
 
 get_min_dist_id([], 100500, Id) :- nb_getval(n_elevators, Id).
 get_min_dist_id([HDist | TDist], Res, Id) :-

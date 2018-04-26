@@ -7,8 +7,8 @@
 
 getting_people_in(Elev, Floor, Id, Res) :-
 	( Id > 0 ->
-		% swritef(Trace, 'Trace getting_people_in \'%t\'', [Id]),
-		% logtrace(Trace),
+		swritef(Trace, 'Trace getting_people_in \'%t\'', [Id]),
+		logtrace(Trace),
 		NextId is Id - 1,
 		get_people_elem(people_floors, NextId, PFloor),
 		get_people_elem(people_states, NextId, PState),
@@ -74,20 +74,28 @@ manage_elev_people(Elev, Floor) :-
 	get_people_in(NPeople, Elev, Floor).
 
 move_elev(_, _, [], []).
-move_elev(_, Pos, [Pos | TM], TM).
-move_elev(Id, Pos, [-1 | _], TList) :-
+move_elev(Id, Pos, [Pos | TM], TM) :-
+	swritef(ElevLog, 'Elevator \'%t\' has reached \'%t\'', [Id, Pos]),
+	logdebug(ElevLog),
 	logtrace('Get people'),
-	manage_elev_people(Id, Pos),
-	get_elev_list('elev_rmap_', Id, [-1 | TList]).
+	manage_elev_people(Id, Pos).
+	% move_elev(Id, Pos, TM, TList).
+move_elev(Id, Pos, [-1 | TM], TList) :-
+	swritef(ElevLog, 'Elevator \'%t\' is closing the door', [Id]),
+	logtrace(ElevLog),
+	move_elev(Id, Pos, TM, TList).
 move_elev(Id, Pos, [HT | TM], [HT | TM]) :-
 	( Pos > HT ->
-		NewPos = Pos - 1
+		NewPos is Pos - 1
 	;
-		NewPos = Pos + 1
+		NewPos is Pos + 1
 	),
 	nb_getval(elevators_floors, List),
 	set_elem(List, Id, 0, NewPos, NewList),
-	nb_setval(elevators_floors, NewList).
+	nb_setval(elevators_floors, NewList),
+	swritef(ElevLog, 'Move elevator \'%t\' from \'%t\' to \'%t\'',
+		[Id, Pos, (NewPos)]),
+	logdebug(ElevLog).
 
 move_elevators(Id) :-
 	(Id =< 0 ->
