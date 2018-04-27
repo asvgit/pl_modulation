@@ -10,8 +10,7 @@ manage_elevators :-
 	nb_getval(elevators_floors, ElevFloors),
 	swritef(ElevLog, 'Elev floors \'%t\'', [ElevFloors]),
 	logdebug(ElevLog),
-	nb_getval(n_elevators, NElev),
-	move_elevators(NElev).
+	move_elevators.
 
 manage_people :-
 	get_step_mod(Step),

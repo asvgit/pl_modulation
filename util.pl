@@ -12,6 +12,9 @@ show_var :-
 
 show_stat :-
 	logtrace('Show statistics'),
+	nb_getval(people_states, PeopleStatusList),
+	swritef(PeopleStaatusLog, 'People status results: \'%t\'', [PeopleStatusList]),
+	loginfo(PeopleStaatusLog),
 	nb_getval(people_waiting, PeopleWaitingList),
 	swritef(PeopleWaitingLog, 'People waiting results: \'%t\'', [PeopleWaitingList]),
 	loginfo(PeopleWaitingLog).
