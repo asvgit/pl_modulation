@@ -22,6 +22,29 @@ set_elev_list(ListPrefix, Id, List) :-
 		nb_setval(ListTerm, List)
 	).
 
+lower_bound([], _, Ind, Ind).
+lower_bound([-1 | T], Val, Ind, Res) :-
+	Next is Ind + 1,
+	lower_bound(T, Val, Next, Res).
+lower_bound([H | T], Val, Ind, Res) :-
+	( H > Val ->
+		Res = Ind
+	;
+		Next = Ind + 1,
+		lower_bound(T, Val, Next, Res)
+	).
+
+insert([], _, Val, _, [Val | [-1]]).
+insert(List, 0, Val, _, [Val | [-1 | List]]).
+insert([H | T], InsertInd, Val, Ind, Res) :-
+	( InsertInd = Ind ->
+		Res = [Val | [-1 | [H | T]]]
+	;
+		Next is Ind + 1,
+		insert(T, InsertInd, Val, Next, TRes),
+		Res = [H | TRes]
+	).
+
 append2map(Elev, Floor) :-
 	atom_concat('elev_rmap_', Elev, MapName),
 	term_string(MapTerm, MapName),
@@ -30,8 +53,8 @@ append2map(Elev, Floor) :-
 		swritef(ElevLog, 'Road map \'%t\' has such floor \'%t\'', [Map, Floor]),
 		logdebug(ElevLog)
 	;
-		append(Map, [Floor], MapWithFloor),
-		append(MapWithFloor, [-1], NewMap),
+		lower_bound(Map, Floor, 0, InsertInd),
+		insert(Map, InsertInd, Floor, 0, NewMap),
 		nb_setval(MapTerm, NewMap),
 		swritef(ElevLog, 'Append to road map \'%t\' floor \'%t\'', [NewMap, Floor]),
 		logdebug(ElevLog)
