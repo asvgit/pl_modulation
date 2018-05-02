@@ -66,3 +66,10 @@ logdebug(Mes) :-
 	make_logstr('DEBUG', Color, Mes, MesInfo),
 	write2log(MesInfo).
 logdebug(_).
+
+logsim(Mes) :-
+	nb_getval(use_log, LogLevel), LogLevel > 3,
+	nb_getval(color_yellow, Color),
+	make_logstr('SIM', Color, Mes, MesInfo),
+	write2log(MesInfo).
+logsim(_).
