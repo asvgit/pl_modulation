@@ -9,7 +9,7 @@ get_elev_list(ListPrefix, Id, List) :-
 	;
 		atom_concat(ListPrefix, Id, ListName),
 		term_string(ListTerm, ListName),
-		nb_getval(ListTerm, List)
+		var_getvalue(ListTerm, List)
 	).
 
 set_elev_list(ListPrefix, Id, List) :-
@@ -19,7 +19,7 @@ set_elev_list(ListPrefix, Id, List) :-
 	;
 		atom_concat(ListPrefix, Id, ListName),
 		term_string(ListTerm, ListName),
-		nb_setval(ListTerm, List)
+		var_setvalue(ListTerm, List)
 	).
 
 lower_bound([], _, Ind, Ind).
@@ -48,14 +48,14 @@ insert([H | T], InsertInd, Val, Ind, Res) :-
 append2map(Elev, Floor) :-
 	atom_concat('elev_rmap_', Elev, MapName),
 	term_string(MapTerm, MapName),
-	nb_getval(MapTerm, Map),
+	var_getvalue(MapTerm, Map),
 	( is_memder(Map, Floor) ->
 		swritef(ElevLog, 'Road map \'%t\' has such floor \'%t\'', [Map, Floor]),
 		logdebug(ElevLog)
 	;
 		lower_bound(Map, Floor, 0, InsertInd),
 		insert(Map, InsertInd, Floor, 0, NewMap),
-		nb_setval(MapTerm, NewMap),
+		var_setvalue(MapTerm, NewMap),
 		swritef(ElevLog, 'Append to road map \'%t\' floor \'%t\'', [NewMap, Floor]),
 		logdebug(ElevLog)
 	).
@@ -84,11 +84,11 @@ get_dist(Pos, [H | T], Floor, Res) :-
 fill_dist(0, _, Dist, Dist).
 fill_dist(Ind, Floor, Dist, Res) :-
 	NextInd is Ind - 1,
-	nb_getval(elevators_floors, ElevFloors),
+	var_getvalue(elevators_floors, ElevFloors),
 	get_elem(ElevFloors, NextInd, 0, ElevPos),
 	atom_concat('elev_rmap_', NextInd, MapName),
 	term_string(MapTerm, MapName),
-	nb_getval(MapTerm, Map),
+	var_getvalue(MapTerm, Map),
 	get_dist(ElevPos, Map, Floor, D),
 	set_elem(Dist, NextInd, 0, D, NewDist),
 	fill_dist(NextInd, Floor, NewDist, Res).
@@ -118,7 +118,7 @@ find_in_elev_lists(Floor, Ind, Res) :-
 	NextInd is Ind - 1,
 	atom_concat('elev_rmap_', NextInd, ListName),
 	term_string(ListTerm, ListName),
-	nb_getval(ListTerm, List),
+	var_getvalue(ListTerm, List),
 	find_in_list(List, Floor, FRes),
 	(FRes ->
 		Res = true

@@ -35,13 +35,3 @@ copy_elev_list(SimPrefix, Id) :-
 		copy_list(SimPrefix, 'elev_people_', NextId),
 		copy_elev_list(SimPrefix, NextId)
 	).
-
-sim_getval(SimPrefix, Var, Value) :-
-	atom_concat(SimPrefix, Var, VarName),
-	term_string(NewVar, VarName),
-	nb_getval(NewVar, Value).
-	
-sim_setval(SimPrefix, Var, Value) :-
-	atom_concat(SimPrefix, Var, VarName),
-	term_string(NewVar, VarName),
-	nb_setval(NewVar, Value).

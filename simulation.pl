@@ -9,6 +9,8 @@
 
 init_sim(SimPrefix) :-
 	copy_var(SimPrefix, step),
+	copy_var(SimPrefix, people_targets),
+	copy_var(SimPrefix, people_floors),
 	copy_var(SimPrefix, people_waiting),
 	copy_var(SimPrefix, people_states),
 	copy_var(SimPrefix, elevators_floors),
@@ -16,7 +18,9 @@ init_sim(SimPrefix) :-
 	copy_elev_list(SimPrefix, NElev).
 
 simulate_loop_step :-
-	logtrace('Do loop step').
+	logtrace('Do loop step'),
+	manage_people,
+	manage_elevators.
 
 simulate_loop(SimPrefix) :-
 	nb_setval(current_sim, SimPrefix),
@@ -25,17 +29,18 @@ simulate_loop(SimPrefix) :-
 	Step >= Steps,
 	swritef(SimLog, 'Simulation \'%t\' is finished', [SimPrefix]),
 	logtrace(SimLog),
+	show_stat,
 	nb_delete(current_sim).
 simulate_loop(SimPrefix) :-
 	nb_setval(current_sim, SimPrefix),
-	sim_getval(SimPrefix, step, Step),
+	var_getvalue(step, Step),
 	nb_getval(n_steps, Steps),
 	Step < Steps,
 	logtrace('Start step'),
 	simulate_loop_step,
 	logtrace('Finish step'),
 	Next is Step + 1,
-	sim_setval(SimPrefix, step, Next),
+	var_setvalue(step, Next),
 	simulate_loop(SimPrefix).
 
 simulate :-

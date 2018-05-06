@@ -6,17 +6,6 @@
 :- ensure_loaded('maintool.pl').
 :- ensure_loaded('init.pl').
 
-manage_elevators :-
-	nb_getval(elevators_floors, ElevFloors),
-	swritef(ElevLog, 'Elev floors \'%t\'', [ElevFloors]),
-	logdebug(ElevLog),
-	move_elevators.
-
-manage_people :-
-	get_step_mod(Step),
-	check_people_appear(Step),
-	check_people_waiting(Step).
-
 do_loop_step :-
 	manage_people,
 	manage_elevators.
@@ -31,18 +20,18 @@ do_loop :-
 	),
 	do_loop.
 do_loop :-
-	nb_getval(step, Step),
+	var_getvalue(step, Step),
 	nb_getval(n_steps, Steps),
 	Step >= Steps.
 do_loop :-
-	nb_getval(step, Step),
+	var_getvalue(step, Step),
 	nb_getval(n_steps, Steps),
 	Step < Steps,
 	logtrace('Start step'),
 	do_loop_step,
 	logtrace('Finish step'),
 	Next is Step + 1,
-	nb_setval(step, Next),
+	var_setvalue(step, Next),
 	do_loop.
 
 run:-

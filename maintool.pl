@@ -83,15 +83,15 @@ change_elev_pos(ElevId, ElevPos, [H | _]) :-
 	;
 		NewPos is ElevPos + 1
 	),
-	nb_getval(elevators_floors, List),
+	var_getvalue(elevators_floors, List),
 	set_elem(List, ElevId, 0, NewPos, NewList),
-	nb_setval(elevators_floors, NewList),
+	var_setvalue(elevators_floors, NewList),
 	swritef(ElevLog, 'Move elevator \'%t\' from \'%t\' to \'%t\'',
 		[ElevId, ElevPos, NewPos]),
 	logdebug(ElevLog).
 
 move_elev(ElevId) :-
-	nb_getval(elevators_floors, ElevFloors),
+	var_getvalue(elevators_floors, ElevFloors),
 	get_elem(ElevFloors, ElevId, 0, ElevPos),
 	MapPrefix = 'elev_rmap_',
 	get_elev_list(MapPrefix, ElevId, RMap),

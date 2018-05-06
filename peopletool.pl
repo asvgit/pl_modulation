@@ -15,7 +15,7 @@ manage_people_waiting(Step, Id, [H_PSL | T_PSL]) :-
 	manage_people_waiting(Step, NextId, T_PSL).
 
 check_people_waiting(Step) :-
-	nb_getval(people_states, PeopleStatesList),
+	var_getvalue(people_states, PeopleStatesList),
 	manage_people_waiting(Step, 0, PeopleStatesList).
 
 manage_people_appear(_, _, []).
@@ -39,7 +39,7 @@ get_people_elem(ListName, Id, Res) :-
 	(Id >= NPeople ->
 		logerror('Error! Index out of n_people'), halt
 	;
-		nb_getval(ListName, List),
+		var_getvalue(ListName, List),
 		get_elem(List, Id, 0, Res)
 	).
 
@@ -48,9 +48,9 @@ set_people_elem(ListName, Id, Val) :-
 	(Id >= NPeople ->
 		logerror('Error! Index out of n_people'), halt
 	;
-		nb_getval(ListName, List),
+		var_getvalue(ListName, List),
 		set_elem(List, Id, 0, Val, Res),
-		nb_setval(ListName, Res),
+		var_setvalue(ListName, Res),
 		swritef(ListLog, 'Change list \'%t\' with id \'%t\' res:\'%t\'', [ListName, Id, Res]),
 		logdebug(ListLog)
 	).

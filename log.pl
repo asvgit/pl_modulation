@@ -1,5 +1,5 @@
 :- ensure_loaded('conf.pl').
-:- ensure_loaded('simulationtool.pl').
+:- ensure_loaded('util.pl').
 
 :- use_module(library(writef)).
 :- nb_setval(logfile, 'project.log').

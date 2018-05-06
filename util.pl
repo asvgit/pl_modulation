@@ -12,12 +12,57 @@ show_var :-
 
 show_stat :-
 	logtrace('Show statistics'),
-	nb_getval(people_states, PeopleStatusList),
+	var_getvalue(people_states, PeopleStatusList),
 	swritef(PeopleStaatusLog, 'People status results: \'%t\'', [PeopleStatusList]),
 	loginfo(PeopleStaatusLog),
-	nb_getval(people_waiting, PeopleWaitingList),
+	var_getvalue(people_waiting, PeopleWaitingList),
 	swritef(PeopleWaitingLog, 'People waiting results: \'%t\'', [PeopleWaitingList]),
 	loginfo(PeopleWaitingLog).
+
+sim_getval(SimPrefix, Var, Value) :-
+	atom_concat(SimPrefix, Var, VarName),
+	term_string(NewVar, VarName),
+	( nb_current(NewVar, Value) -> true;
+		swritef(ErrorLog, 'Such var does not exist \'%t\'', [NewVar]),
+		logerror(ErrorLog),
+		halt
+	).
+	
+sim_setval(SimPrefix, Var, Value) :-
+	atom_concat(SimPrefix, Var, VarName),
+	term_string(NewVar, VarName),
+	nb_setval(NewVar, Value),
+	( nb_current(NewVar, _) -> 
+		nb_setval(NewVar, Value)
+	;
+		swritef(ErrorLog, 'Fail set var! Such var does not exist \'%t\'', [NewVar]),
+		logerror(ErrorLog),
+		halt
+	).
+
+var_getvalue(Key, Value) :-
+	( nb_current(current_sim, CurrentPrefix) ->
+		sim_getval(CurrentPrefix, Key, Value)
+	;
+		( nb_current(Key, Value) -> true;
+			swritef(ErrorLog, 'Such var does not exist \'%t\'', [Key]),
+			logerror(ErrorLog),
+			halt
+		)
+	).
+
+var_setvalue(Key, Value) :-
+	( nb_current(current_sim, CurrentPrefix) ->
+		sim_setval(CurrentPrefix, Key, Value)
+	;
+		( nb_current(Key, _) ->
+			nb_setval(Key, Value)
+		;
+			swritef(ErrorLog, 'Fail set var! Such var does not exist \'%t\'', [Key]),
+			logerror(ErrorLog),
+			halt
+		)
+	).
 
 is_memder([], _) :- false.
 is_memder([H | _], Val) :- H = Val.
@@ -62,3 +107,14 @@ get_step_mod(Res) :-
 	;
 		Res = null
 	).
+
+manage_elevators :-
+	var_getvalue(elevators_floors, ElevFloors),
+	swritef(ElevLog, 'Elev floors \'%t\'', [ElevFloors]),
+	logdebug(ElevLog),
+	move_elevators.
+
+manage_people :-
+	var_getvalue(step,Step),
+	check_people_appear(Step),
+	check_people_waiting(Step).
