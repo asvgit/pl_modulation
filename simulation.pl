@@ -51,3 +51,44 @@ simulate :-
 	),
 	init_sim(SimPrefix),
 	simulate_loop(SimPrefix).
+
+do_simulate(Floor, Elev, H) :-
+	nb_getval(current_sim, SimPrefix),
+	init_sim(SimPrefix),
+	append2map(Elev, Floor),
+	manage_elevators,
+	var_getvalue(step, Step),
+	Next is Step + 1,
+	var_setvalue(step, Next),
+	simulate_loop(SimPrefix),
+	var_getvalue(people_waiting, PeopleWaitingList),
+	sum_list(PeopleWaitingList, H).
+
+simulate(Floor, Elev, H) :-
+	(nb_current(current_sim, CurrentPrefix) ->
+		atom_concat(CurrentPrefix, Elev, SimPrefix),
+		atom_concat(SimPrefix, '_', Prefix),
+		nb_setval(current_sim, Prefix),
+		do_simulate(Floor, Elev, H),
+		nb_setval(current_sim, CurrentPrefix)
+	;
+		nb_setval(current_sim, 'r_'),
+		do_simulate(Floor, Elev, H),
+		nb_delete(current_sim)
+	).
+
+calculating(_, Elev, []) :-
+	nb_getval(n_elevators, NElev),
+   	Elev >= NElev.
+calculating(Floor, Elev, [H | T]) :-
+	simulate(Floor, Elev, H),
+	Next is Elev + 1,
+	calculating(Floor, Next, T).
+
+calculate(Floor, ResList) :-
+	calculating(Floor, 0, ResList).
+
+do_elev_call(Floor, Elev) :-
+	calculate(Floor, ResList),
+	min_list(ResList, Min),
+	nth0(Elev, ResList, Min).

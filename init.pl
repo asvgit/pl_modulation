@@ -64,9 +64,10 @@ init_people_targets :-
 
 init_elevators :-
 	logtrace('Init elevators proc'),
-	nb_getval(n_elevators, N),
-	zero_list(N, List),
-	nb_setval(elevators_floors, List),
+	% nb_getval(n_elevators, N),
+	% zero_list(N, List),
+	% nb_setval(elevators_floors, List),
+	nb_setval(elevators_floors, [0, 1]),
 	swritef(ElevLog, 'Init elevators floors \'%t\'', [List]),
 	logdebug(ElevLog),
 	init_elev_lists.
