@@ -6,6 +6,6 @@
 % 1 - info
 % 2 - trace
 % 3 - debug
-:- nb_setval(use_log, 3).
+:- nb_setval(use_log, 4).
 % 0 - no, 1 - yes
 :- nb_setval(use_color_log, 1).

@@ -1,4 +1,5 @@
 :- ensure_loaded('conf.pl').
+:- ensure_loaded('simulationtool.pl').
 
 :- use_module(library(writef)).
 :- nb_setval(logfile, 'project.log').
@@ -24,52 +25,52 @@ write2log(Mes) :-
 	writeln(LOG, Res),
 	close(LOG).
 
-make_logstr(Name, Color, Mes, Templ) :-
+make_logstr(Name, Color, Mes) :-
 	atom_concat(' ', Mes, Msg),
 	nb_getval(use_color_log, CUse),
 	( CUse > 0 -> 
 		nb_getval(colorend, CEnd),
 		atom_concat(Color, Name, CName),
 		atom_concat(CName, Msg, CTempl),
-		atom_concat(CTempl, CEnd, Templ)
+		atom_concat(CTempl, CEnd, Res)
 	;
-		atom_concat(Name, Msg, Templ)
+		atom_concat(Name, Msg, Res)
+	),
+	( nb_current(current_sim, CurrentPrefix) ->
+		nb_getval(use_log, LogLevel),
+		( LogLevel > 3 ->
+			sim_getval(CurrentPrefix, step, SimStep),
+			swritef(SimPrefix, '[%t:%t] ', [CurrentPrefix, SimStep]),
+			atom_concat(SimPrefix, Res, SimRes),
+			write2log(SimRes)
+		; true)
+	;
+		write2log(Res)
 	).
 
+	% nb_getval(use_log, LogLevel), LogLevel > 3,
 logerror(Mes) :-
 	nb_getval(color_rad, Color),
-	make_logstr('ERROR', Color, Mes, MesInfo),
-	write2log(MesInfo).
+	make_logstr('ERROR', Color, Mes).	
 
 logwarn(Mes) :-
 	nb_getval(color_orange, Color),
-	make_logstr('WARNING', Color, Mes, MesInfo),
-	write2log(MesInfo).
+	make_logstr('WARNING', Color, Mes).	
 
 loginfo(Mes) :-
 	nb_getval(use_log, LogLevel), LogLevel > 0,
 	nb_getval(color_green, Color),
-	make_logstr('INFO', Color, Mes, MesInfo),
-	write2log(MesInfo).
+	make_logstr('INFO', Color, Mes).	
 loginfo(_).
 
 logtrace(Mes) :-
 	nb_getval(use_log, LogLevel), LogLevel > 1,
 	nb_getval(color_cyan, Color),
-	make_logstr('TRACE', Color, Mes, MesInfo),
-	write2log(MesInfo).
+	make_logstr('TRACE', Color, Mes).	
 logtrace(_).
 
 logdebug(Mes) :-
 	nb_getval(use_log, LogLevel), LogLevel > 2,
 	nb_getval(color_yellow, Color),
-	make_logstr('DEBUG', Color, Mes, MesInfo),
-	write2log(MesInfo).
+	make_logstr('DEBUG', Color, Mes).	
 logdebug(_).
-
-logsim(Mes) :-
-	nb_getval(use_log, LogLevel), LogLevel > 3,
-	nb_getval(color_yellow, Color),
-	make_logstr('SIM', Color, Mes, MesInfo),
-	write2log(MesInfo).
-logsim(_).
