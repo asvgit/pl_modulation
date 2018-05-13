@@ -1,6 +1,7 @@
 :- ensure_loaded('conf.pl').
 :- ensure_loaded('log.pl').
 :- ensure_loaded('util.pl').
+:- ensure_loaded('simulation.pl').
 
 get_elev_list(ListPrefix, Id, List) :-
 	nb_getval(n_elevators, NElev),
@@ -102,7 +103,10 @@ find_available_elev(Floor) :-
 	get_min_dist_id(Distances, MinDist, Elev),
 	swritef(ElevMinDistLog, 'Current min dist \'%t\' with id \'%t\'', [MinDist, Elev]),
 	logdebug(ElevMinDistLog),
-	append2map(Elev, Floor).
+	do_elev_call(Floor, Elev2),
+	swritef(ElevMinDistLog2, 'Eleve is chosen \'%t\'', [Elev2]),
+	logdebug(ElevMinDistLog2),
+	append2map(Elev2, Floor).
 
 find_in_list([], _, Res) :- Res = false.
 find_in_list([H | T], Val, Res) :-

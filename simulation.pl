@@ -29,8 +29,7 @@ simulate_loop(SimPrefix) :-
 	Step >= Steps,
 	swritef(SimLog, 'Simulation \'%t\' is finished', [SimPrefix]),
 	logtrace(SimLog),
-	show_stat,
-	nb_delete(current_sim).
+	show_stat.
 simulate_loop(SimPrefix) :-
 	nb_setval(current_sim, SimPrefix),
 	var_getvalue(step, Step),
@@ -54,25 +53,30 @@ simulate :-
 
 do_simulate(Floor, Elev, H) :-
 	nb_getval(current_sim, SimPrefix),
-	init_sim(SimPrefix),
 	append2map(Elev, Floor),
 	manage_elevators,
 	var_getvalue(step, Step),
 	Next is Step + 1,
 	var_setvalue(step, Next),
 	simulate_loop(SimPrefix),
-	var_getvalue(people_waiting, PeopleWaitingList),
-	sum_list(PeopleWaitingList, H).
+	sim_getval(SimPrefix, people_waiting, PeopleWaitingList),
+	sum_list(PeopleWaitingList, H),
+	swritef(SimLog, 'Waiting sum is \'%t\'', [H]),
+	logdebug(SimLog).
 
 simulate(Floor, Elev, H) :-
 	(nb_current(current_sim, CurrentPrefix) ->
 		atom_concat(CurrentPrefix, Elev, SimPrefix),
 		atom_concat(SimPrefix, '_', Prefix),
+		init_sim(Prefix),
 		nb_setval(current_sim, Prefix),
 		do_simulate(Floor, Elev, H),
 		nb_setval(current_sim, CurrentPrefix)
 	;
-		nb_setval(current_sim, 'r_'),
+		atom_concat('r_', Elev, SimPrefix),
+		atom_concat(SimPrefix, '_', Prefix),
+		init_sim(Prefix),
+		nb_setval(current_sim, Prefix),
 		do_simulate(Floor, Elev, H),
 		nb_delete(current_sim)
 	).
@@ -81,6 +85,8 @@ calculating(_, Elev, []) :-
 	nb_getval(n_elevators, NElev),
    	Elev >= NElev.
 calculating(Floor, Elev, [H | T]) :-
+	nb_getval(n_elevators, NElev),
+   	Elev < NElev,
 	simulate(Floor, Elev, H),
 	Next is Elev + 1,
 	calculating(Floor, Next, T).

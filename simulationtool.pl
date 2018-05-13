@@ -10,7 +10,7 @@ copy_var(SimPrefix, Var) :-
 	(nb_current(Var, _) ->
 		atom_concat(SimPrefix, Var, VarName),
 		term_string(NewVar, VarName),
-		nb_getval(Var, Value),
+		var_getvalue(Var, Value),
 		nb_setval(NewVar, Value),
 		swritef(CopyLog, 'Copy var \'%t\' into \'%t\' with val \'%t\'',
 			[Var, NewVar, Value]),
