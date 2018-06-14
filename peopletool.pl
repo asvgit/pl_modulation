@@ -21,11 +21,20 @@ check_people_waiting(Step) :-
 manage_people_appear(_, _, []).
 manage_people_appear(Step, Id, [H | T]) :-
 	(Step = H ->
-		get_people_elem(people_floors, Id, Floor),
-		swritef(AppearLog, 'A man appears with id \'%t\' on floor with id \'%t\'', [Id, Floor]),
-		loginfo(AppearLog),
-		set_people_elem(people_states, Id, 1),
-		elev_call(Floor)
+		get_people_elem(people_probability, Id, Prob),
+		get_people_elem(people_ver, Id, Ver),
+		swritef(VerLog, 'Man\'s prob \'%t\' and ver \'%t\'', [Prob, Ver]),
+		logdebug(VerLog),
+		(Ver >= 50 ->
+			get_people_elem(people_floors, Id, Floor),
+			swritef(AppearLog, 'A man appears with id \'%t\' on floor with id \'%t\'', [Id, Floor]),
+			loginfo(AppearLog),
+			set_people_elem(people_states, Id, 1),
+			elev_call(Floor)
+		;
+			set_people_elem(people_states, Id, -1),
+			loginfo('A man does not appear')
+		)
 	; true),
 	NextId is Id + 1,
 	manage_people_appear(Step, NextId, T).

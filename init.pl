@@ -25,8 +25,24 @@ init_people :-
 	swritef(PeopleFloorLog, 'Init people floors \'%t\'', [PeopleFloorList]),
 	logdebug(PeopleFloorLog),
 	init_people_targets,
+	init_people_probability,
+	init_people_probability_real,
 	init_waiting_list,
 	init_people_states.
+
+init_people_probability :-
+	nb_getval(n_people, N),
+	rand_seq(N, 100, List),
+	nb_setval(people_probability, List),
+	swritef(PeopleLog, 'Init people probability \'%t\'', [List]),
+	logdebug(PeopleLog).
+
+init_people_probability_real :-
+	nb_getval(n_people, N),
+	rand_seq(N, 100, List),
+	nb_setval(people_ver, List),
+	swritef(PeopleLog, 'Init people probability (real) \'%t\'', [List]),
+	logdebug(PeopleLog).
 
 init_waiting_list :-
 	nb_getval(n_people, N),

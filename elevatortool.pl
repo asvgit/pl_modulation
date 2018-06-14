@@ -103,10 +103,11 @@ find_available_elev(Floor) :-
 	get_min_dist_id(Distances, MinDist, Elev),
 	swritef(ElevMinDistLog, 'Current min dist \'%t\' with id \'%t\'', [MinDist, Elev]),
 	logdebug(ElevMinDistLog),
-	do_elev_call(Floor, Elev2),
-	swritef(ElevMinDistLog2, 'Eleve is chosen \'%t\'', [Elev2]),
-	logdebug(ElevMinDistLog2),
-	append2map(Elev2, Floor).
+	append2map(Elev, Floor).
+	% do_elev_call(Floor, Elev2),
+	% swritef(ElevMinDistLog2, 'Eleve is chosen \'%t\'', [Elev2]),
+	% logdebug(ElevMinDistLog2),
+	% append2map(Elev2, Floor).
 
 find_in_list([], _, Res) :- Res = false.
 find_in_list([H | T], Val, Res) :-
