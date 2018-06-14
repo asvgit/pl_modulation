@@ -32,14 +32,16 @@ init_people :-
 
 init_people_probability :-
 	nb_getval(n_people, N),
-	rand_seq(N, 100, List),
+	% rand_seq(N, 100, List),
+	List = [30, 60],
 	nb_setval(people_probability, List),
 	swritef(PeopleLog, 'Init people probability \'%t\'', [List]),
 	logdebug(PeopleLog).
 
 init_people_probability_real :-
 	nb_getval(n_people, N),
-	rand_seq(N, 100, List),
+	% rand_seq(N, 100, List),
+	List = [70, 20],
 	nb_setval(people_ver, List),
 	swritef(PeopleLog, 'Init people probability (real) \'%t\'', [List]),
 	logdebug(PeopleLog).

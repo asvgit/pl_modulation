@@ -13,6 +13,8 @@ init_sim(SimPrefix) :-
 	copy_var(SimPrefix, people_floors),
 	copy_var(SimPrefix, people_waiting),
 	copy_var(SimPrefix, people_states),
+	copy_var(SimPrefix, people_probability),
+	copy_var(SimPrefix, people_ver),
 	copy_var(SimPrefix, elevators_floors),
 	nb_getval(n_elevators, NElev),
 	copy_elev_list(SimPrefix, NElev).

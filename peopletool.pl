@@ -25,7 +25,8 @@ manage_people_appear(Step, Id, [H | T]) :-
 		get_people_elem(people_ver, Id, Ver),
 		swritef(VerLog, 'Man\'s prob \'%t\' and ver \'%t\'', [Prob, Ver]),
 		logdebug(VerLog),
-		(Ver >= 50 ->
+		(nb_current(current_sim, _) -> TheVer = Prob ; TheVer = Ver),
+		(TheVer >= 50 ->
 			get_people_elem(people_floors, Id, Floor),
 			swritef(AppearLog, 'A man appears with id \'%t\' on floor with id \'%t\'', [Id, Floor]),
 			loginfo(AppearLog),
