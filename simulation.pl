@@ -24,6 +24,7 @@ simulate_loop_step :-
 	manage_people,
 	manage_elevators.
 
+simulate_loop(SimPrefix) :- nb_getval(deep, Deep), string_length(SimPrefix, CurrentDeep), Deep =< CurrentDeep.
 simulate_loop(SimPrefix) :-
 	nb_setval(current_sim, SimPrefix),
 	sim_getval(SimPrefix, step, Step),
