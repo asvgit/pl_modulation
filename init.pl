@@ -11,16 +11,16 @@ init :-
 
 init_people :-
 	logtrace('Init people proc'),
-	nb_getval(n_steps, Steps),
-	nb_getval(n_people, NPeople),
-	rand_seq(NPeople, Steps, PeopleAppearList),
-	% PeopleAppearList = [2, 4],
+	% nb_getval(n_steps, Steps),
+	% nb_getval(n_people, NPeople),
+	% rand_seq(NPeople, Steps, PeopleAppearList),
+	PeopleAppearList = [6,7,5,1,6,19,4,10,15,0],
 	nb_setval(people_appear, PeopleAppearList),
 	swritef(PeopleAppearLog, 'Init people apprears \'%t\'', [PeopleAppearList]),
 	logdebug(PeopleAppearLog),
-	nb_getval(n_floors, NFloors),
-	rand_seq(NPeople, NFloors, PeopleFloorList),
-	% PeopleFloorList = [1, 0],
+	% nb_getval(n_floors, NFloors),
+	% rand_seq(NPeople, NFloors, PeopleFloorList),
+	PeopleFloorList = [3,2,3,1,0,0,2,1,3,3],
 	nb_setval(people_floors, PeopleFloorList),
 	swritef(PeopleFloorLog, 'Init people floors \'%t\'', [PeopleFloorList]),
 	logdebug(PeopleFloorLog),
@@ -31,17 +31,17 @@ init_people :-
 	init_people_states.
 
 init_people_probability :-
-	nb_getval(n_people, N),
-	rand_seq(N, 100, List),
-	% List = [30, 60],
+	% nb_getval(n_people, N),
+	% rand_seq(N, 100, List),
+	List = [66,29,62,42,23,61,7,57,58,48],
 	nb_setval(people_probability, List),
 	swritef(PeopleLog, 'Init people probability \'%t\'', [List]),
 	logdebug(PeopleLog).
 
 init_people_probability_real :-
-	nb_getval(n_people, N),
-	rand_seq(N, 100, List),
-	% List = [70, 20],
+	% nb_getval(n_people, N),
+	% rand_seq(N, 100, List),
+	List = [66,29,62,42,23,61,7,57,58,48],
 	nb_setval(people_ver, List),
 	swritef(PeopleLog, 'Init people probability (real) \'%t\'', [List]),
 	logdebug(PeopleLog).
@@ -71,10 +71,10 @@ fill_people_targets(NFloors, [HPFL | TPFL], [HPTL | TPTL]) :-
 	fill_people_targets(NFloors, TPFL, TPTL).
 
 init_people_targets :-
-	nb_getval(n_floors, NFloors),
-	nb_getval(people_floors, PeopleFloorList),
-	fill_people_targets(NFloors, PeopleFloorList, PeopleTargetsList),
-	% PeopleTargetsList = [4, 4],
+	% nb_getval(n_floors, NFloors),
+	% nb_getval(people_floors, PeopleFloorList),
+	% fill_people_targets(NFloors, PeopleFloorList, PeopleTargetsList),
+	PeopleTargetsList = [4,1,1,4,4,1,1,3,0,4],
 	nb_setval(people_targets, PeopleTargetsList),
 	swritef(PeopleLog, 'Init people targets \'%t\'', [PeopleTargetsList]),
 	logdebug(PeopleLog).
